@@ -32,14 +32,14 @@ class ZKTecoController extends Controller
 
       $lines = [
         "GET OPTION FROM: {$sn}",
-        "Stamp={$attlogStamp}",
-        "ATTLOGStamp={$attlogStamp}",
-        "OpStamp={$operlogStamp}",
-        "OPERLOGStamp={$operlogStamp}",
-        "ATTPHOTOStamp={$photoStamp}",
-        "ErrorDelay=60",
+        "Stamp=0",
+        "ATTLOGStamp=0",
+        "OpStamp=0",
+        "OPERLOGStamp=0",
+        "ATTPHOTOStamp=0",  // ✅ ganti dari PhotoStamp -> ATTPHOTOStamp
+        "ErrorDelay=10",
         "Delay=5",
-        "TransTimes=00:00;23:00",
+        "TransTimes=00:00;12:00",
         "TransInterval=1",
         "Realtime=1",
         "Encrypt=0",
