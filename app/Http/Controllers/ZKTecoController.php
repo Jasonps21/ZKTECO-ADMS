@@ -28,17 +28,17 @@ class ZKTecoController extends Controller
     if ($request->isMethod('GET') && $request->query('options')) {
       $lines = [
         'GET OPTION FROM: ' . $request->query('SN'),
-        'ATTLOGStamp:0',      // kirim semua attendance dari awal
-        'OPERLOGStamp:0',     // log operasi/access events
-        'ATTPHOTOStamp:0',    // abaikan jika tidak support
-        'ErrorDelay:10',
-        'Delay:5',            // percepat sedikit supaya cepat terlihat
-        'TransTimes:00:00;23:59',
-        'TransInterval:1',
-        'Realtime:1',
+        'ATTLOGStamp: 9999',      // kirim semua attendance dari awal
+        'OPERLOGStamp: 12',     // log operasi/access events
+        'ATTPHOTOStamp: None',    // abaikan jika tidak support
+        'ErrorDelay: 10',
+        'Delay: 5',            // percepat sedikit supaya cepat terlihat
+        'TransTimes: 00:00;23:59',
+        'TransInterval: 1',
+        'Realtime: 1',
         'TRANSFlag: 1010000000',
         // Tambahan yang sering membantu ACC:
-        'TimeZone:7',         // contoh: GMT+7 (sesuaikan zona kamu)
+        'TimeZone: 7',         // contoh: GMT+7 (sesuaikan zona kamu)
         'Encrypt: None',
       ];
       Log::info('[CDAT OPT] reply options', ['sn' => $request->query('SN')]);
