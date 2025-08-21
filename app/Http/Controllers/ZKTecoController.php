@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\AttendanceLog;
+use Clockwork\Storage\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -12,63 +13,76 @@ class ZKTecoController extends Controller
 {
   public function cdata(Request $request)
   {
-
-    Log::info('[CDAT ANY] hit', [
+    Log::info('[CDATA ANY] hit', [
       'method' => $request->method(),
       'q'      => $request->query(),
       'len'    => strlen((string)$request->getContent()),
       'ip'     => $request->ip(),
       'ua'     => $request->userAgent(),
     ]);
-
-    if ($request->isMethod('POST')) {
-      Log::info('[CDAT POST BODY]', ['first2k' => mb_substr((string)$request->getContent(), 0, 2000)]);
-    }
+    
     // 1) Handshake “options=all”
-    if ($request->isMethod('GET') && $request->query('options')) {
+    if ($request->isMethod('GET') && strtolower((string)$request->query('options')) === 'all') {
+      $sn = $request->query('SN');
+
+      // Mulai dari 0 supaya device dorong semua log baru
+      $attlogStamp   = 0;
+      $operlogStamp  = 0;
+      $photoStamp    = 0;
+
       $lines = [
-        'GET OPTION FROM: ' . $request->query('SN'),
-        'ATTLOGStamp: 9999',      // kirim semua attendance dari awal
-        'OPERLOGStamp: 12',     // log operasi/access events
-        'ATTPHOTOStamp: None',    // abaikan jika tidak support
-        'ErrorDelay: 10',
-        'Delay: 5',            // percepat sedikit supaya cepat terlihat
-        'TransTimes: 00:00;23:59',
-        'TransInterval: 1',
-        'Realtime: 1',
-        'TRANSFlag: 1010000000',
-        // Tambahan yang sering membantu ACC:
-        'TimeZone: 7',         // contoh: GMT+7 (sesuaikan zona kamu)
-        'Encrypt: None',
+        "GET OPTION FROM: {$sn}",
+        "Stamp={$attlogStamp}",
+        "ATTLOGStamp={$attlogStamp}",
+        "OpStamp={$operlogStamp}",
+        "OPERLOGStamp={$operlogStamp}",
+        "PhotoStamp={$photoStamp}",
+        "ErrorDelay=60",
+        "Delay=10",
+        "TransTimes=00:00;12:00",
+        "TransInterval=1",
+        "Realtime=1",
+        "Encrypt=0",
       ];
-      Log::info('[CDAT OPT] reply options', ['sn' => $request->query('SN')]);
+
+      Log::info('[CDATA OPT] reply options', ['sn' => $sn]);
       return response(implode("\r\n", $lines) . "\r\n", 200)
         ->header('Content-Type', 'text/plain');
     }
 
     // 2) Terima log (POST)
-    $sn  = $request->query('SN') ?? 'UNKNOWN';
-    $raw = (string) $request->getContent();
-    Log::info('[CDAT POST] len=' . strlen($raw), ['sn' => $sn]);
+    if ($request->isMethod('POST')) {
+      $sn  = $request->query('SN') ?? 'UNKNOWN';
+      $raw = (string)$request->getContent();
 
-    $lines = preg_split("/\r\n|\n|\r/", $raw);
-    $saved = 0;
-    foreach ($lines as $line) {
-      $line = trim($line);
-      if ($line === '') continue;
-      DB::table('attendance_logs')->insert([
-        'id'         => (string) \Illuminate\Support\Str::uuid(),
-        'device_sn'  => $sn,
-        'raw_line'   => $line,
-        'created_at' => now(),
-        'updated_at' => now(),
-      ]);
-      $saved++;
-      Log::info('[ATTLOG] saved', ['sn' => $sn, 'line' => $line]);
+      Log::info('[CDATA POST] len=' . strlen($raw), ['sn' => $sn]);
+      Log::info('[CDATA POST BODY first2k]', ['first2k' => mb_substr($raw, 0, 2000)]);
+
+      // Parse per baris
+      $lines = preg_split("/\r\n|\n|\r/", $raw);
+      $saved = 0;
+      foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '') continue;
+
+        DB::table('attendance_logs')->insert([
+          'id'         => (string)\Illuminate\Support\Str::uuid(),
+          'device_sn'  => $sn,
+          'raw_line'   => $line,
+          'created_at' => now(),
+          'updated_at' => now(),
+        ]);
+        $saved++;
+        Log::info('[ATTLOG] saved', ['sn' => $sn, 'line' => $line]);
+      }
+
+      // Balasan standar
+      return response("OK\r\n", 200)->header('Content-Type', 'text/plain');
     }
+
+    // Default fallback
     return response("OK\r\n", 200)->header('Content-Type', 'text/plain');
   }
-
 
   public function getrequest(Request $r)
   {

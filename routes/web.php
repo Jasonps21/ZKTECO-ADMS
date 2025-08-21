@@ -13,13 +13,14 @@ Route::get('/', function () {
 });
 
 Route::match(['GET', 'POST'], '/iclock/cdata', [ZKTecoController::class, 'cdata'])
-    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+    ->withoutMiddleware([Csrf::class]);
 
 Route::match(['GET', 'POST'], '/iclock/registry', [ZKTecoController::class, 'registry'])
     ->withoutMiddleware([Csrf::class]);
 
 Route::match(['GET', 'POST'], '/iclock/devicecmd', [ZKTecoController::class, 'devicecmd'])
-    ->withoutMiddleware([VerifyCsrfToken::class]);
+    ->withoutMiddleware([Csrf::class]);
+
 
 Route::get('/iclock/getrequest', [ZKTecoController::class, 'getrequest'])
-    ->withoutMiddleware([VerifyCsrfToken::class]);
+    ->withoutMiddleware([Csrf::class]);
