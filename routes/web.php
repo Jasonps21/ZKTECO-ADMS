@@ -6,6 +6,7 @@ use App\Http\Middleware\DebugZK;
 use App\Http\Middleware\ProfileZKTecoRequest;
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Http\Middleware\VerifyZKTecoSignature;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as Csrf;
 
 Route::get('/', function () {
     return view('welcome');
@@ -15,7 +16,7 @@ Route::match(['GET', 'POST'], '/iclock/cdata', [ZKTecoController::class, 'cdata'
     ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 Route::match(['GET', 'POST'], '/iclock/registry', [ZKTecoController::class, 'registry'])
-    ->withoutMiddleware([VerifyCsrfToken::class]);
+    ->withoutMiddleware([Csrf::class]);
 
 Route::match(['GET', 'POST'], '/iclock/devicecmd', [ZKTecoController::class, 'devicecmd'])
     ->withoutMiddleware([VerifyCsrfToken::class]);
