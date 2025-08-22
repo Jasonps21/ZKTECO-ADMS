@@ -20,39 +20,60 @@ class ZKTecoController extends Controller
       'ip'     => $request->ip(),
       'ua'     => $request->userAgent(),
     ]);
-    
+
     // 1) Handshake “options=all”
     if ($request->isMethod('GET') && strtolower((string)$request->query('options')) === 'all') {
       $sn = $request->query('SN');
 
-      // Mulai dari 0 supaya device dorong semua log baru
-      $attlogStamp   = 0;
-      $operlogStamp  = 0;
-      $photoStamp    = 0;
-
       $lines = [
         "GET OPTION FROM: {$sn}",
         "Stamp=0",
-        "OpStamp=0",
         "ATTLOGStamp=0",
+        "OpStamp=0",
         "OPERLOGStamp=0",
         "ATTPHOTOStamp=0",
         "ErrorDelay=10",
         "Delay=5",
         "TransTimes=00:00;12:00",
         "TransInterval=1",
-        "TransFlag=1111000000",
         "Realtime=1",
         "Encrypt=0",
-        "Timeout=60",
-        "SyncTime=60",
-        "ServerVer=3.4.1",
-        "TimeNameStamp=YYYY-MM-DDThh:mm:ss",
       ];
+      $reply = implode("\r\n", $lines) . "\r\n";
 
-      Log::info('[CDATA OPT] reply options', ['sn' => $sn]);
-      return response(implode("\r\n", $lines) . "\r\n", 200)
-        ->header('Content-Type', 'text/plain');
+      // Log hexdump (opsional, untuk cek 0d0a/CRLF)
+      Log::info('[CDATA OPT REPLY HEX]', ['hex' => bin2hex($reply)]);
+
+      return response($reply, 200)
+        ->header('Content-Type', 'text/plain')
+        ->header('Connection', 'close');         // <-- penting di beberapa firmware
+    }
+
+    if ($request->isMethod('GET') && !$request->has('options')) {
+      $sn = $request->query('SN');
+
+      $lines = [
+        "GET OPTION FROM: {$sn}",
+        "Stamp=0",
+        "ATTLOGStamp=0",
+        "OpStamp=0",
+        "OPERLOGStamp=0",
+        "ATTPHOTOStamp=0",
+        "ErrorDelay=10",
+        "Delay=5",
+        "TransTimes=00:00;12:00",
+        "TransInterval=1",
+        "Realtime=1",
+        "Encrypt=0",
+      ];
+      $reply = implode("\r\n", $lines) . "\r\n";
+
+      // Log hexdump (opsional, untuk cek 0d0a/CRLF)
+      Log::info('[CDATA OPT REPLY HEX]', ['hex' => bin2hex($reply)]);
+
+      return response($reply, 200)
+        ->header('Content-Type', 'text/plain')
+        ->header('Connection', 'close');         // <-- penting di beberapa firmware
     }
 
     // 2) Terima log (POST)
