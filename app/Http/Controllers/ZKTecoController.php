@@ -46,7 +46,8 @@ class ZKTecoController extends Controller
 
       return response($reply, 200)
         ->header('Content-Type', 'text/plain')
-        ->header('Connection', 'close');         // <-- penting di beberapa firmware
+        ->header('Content-Length', (string) strlen($reply))   // <- paksa non-chunked
+        ->header('Connection', 'close');           // <-- penting di beberapa firmware
     }
 
     if ($request->isMethod('GET') && !$request->has('options')) {
@@ -73,7 +74,8 @@ class ZKTecoController extends Controller
 
       return response($reply, 200)
         ->header('Content-Type', 'text/plain')
-        ->header('Connection', 'close');         // <-- penting di beberapa firmware
+        ->header('Content-Length', (string) strlen($reply))   // <- paksa non-chunked
+        ->header('Connection', 'close');           // <-- penting di beberapa firmware
     }
 
     // 2) Terima log (POST)
@@ -103,7 +105,11 @@ class ZKTecoController extends Controller
       }
 
       // Balasan standar
-      return response("OK\r\n", 200)->header('Content-Type', 'text/plain');
+      $ok = "OK\r\n";
+      return response($ok, 200)
+        ->header('Content-Type', 'text/plain')
+        ->header('Content-Length', (string) strlen($ok))
+        ->header('Connection', 'close');
     }
 
     // Default fallback
