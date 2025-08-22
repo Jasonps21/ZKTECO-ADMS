@@ -44,10 +44,12 @@ class ZKTecoController extends Controller
       // Log hexdump (opsional, untuk cek 0d0a/CRLF)
       Log::info('[CDATA OPT REPLY HEX]', ['hex' => bin2hex($reply)]);
 
-      return response($reply, 200)
-        ->header('Content-Type', 'text/plain')
-        ->header('Content-Length', (string) strlen($reply))   // <- paksa non-chunked
-        ->header('Connection', 'close');           // <-- penting di beberapa firmware
+      $response = response($reply, 200);
+      $response->headers->set('Content-Type', 'text/plain', true); // override total
+      $response->headers->remove('X-Powered-By'); // opsional
+      return $response
+        ->header('Content-Length', (string) strlen($reply))
+        ->header('Connection', 'close');          // <-- penting di beberapa firmware
     }
 
     if ($request->isMethod('GET') && !$request->has('options')) {
@@ -72,10 +74,12 @@ class ZKTecoController extends Controller
       // Log hexdump (opsional, untuk cek 0d0a/CRLF)
       Log::info('[CDATA OPT REPLY HEX]', ['hex' => bin2hex($reply)]);
 
-      return response($reply, 200)
-        ->header('Content-Type', 'text/plain')
-        ->header('Content-Length', (string) strlen($reply))   // <- paksa non-chunked
-        ->header('Connection', 'close');           // <-- penting di beberapa firmware
+      $response = response($reply, 200);
+      $response->headers->set('Content-Type', 'text/plain', true); // override total
+      $response->headers->remove('X-Powered-By'); // opsional
+      return $response
+        ->header('Content-Length', (string) strlen($reply))
+        ->header('Connection', 'close');         // <-- penting di beberapa firmware
     }
 
     // 2) Terima log (POST)
@@ -106,14 +110,16 @@ class ZKTecoController extends Controller
 
       // Balasan standar
       $ok = "OK\r\n";
-      return response($ok, 200)
-        ->header('Content-Type', 'text/plain')
+      $response = response($ok, 200);
+      $response->headers->set('Content-Type', 'text/plain', true); // override total
+      $response->headers->remove('X-Powered-By'); // opsional
+      return $response
         ->header('Content-Length', (string) strlen($ok))
         ->header('Connection', 'close');
     }
 
     // Default fallback
-    return response("OK\r\n", 200)->header('Content-Type', 'text/plain');
+    return response("OK\r\n", 200)->header('Content-Type', 'text/plain')->header('Connection', 'close');
   }
 
   public function getrequest(Request $r)
